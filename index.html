@@ -1,236 +1,695 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VOIDPORT — The City That Forgot to Live</title>
-    <style>
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        user-select: none;
-      }
-      body, html {
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background-color: #050510;
-        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-        color: #d1dbe5;
-      }
-      #webgl-canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-        z-index: 1;
-      }
-      /* Minimalist cinematic viewport overlay */
-      #hud {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 10;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        padding: 24px;
-      }
-      .hud-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-      }
-      .brand-title {
-        letter-spacing: 0.28em;
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: #f0abfc;
-        text-shadow: 0 0 16px rgba(217, 70, 239, 0.6);
-      }
-      .brand-sub {
-        font-size: 0.72rem;
-        letter-spacing: 0.2em;
-        color: #94a3b8;
-        margin-top: 4px;
-        text-transform: uppercase;
-      }
-      .status-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(13, 11, 28, 0.75);
-        border: 1px solid rgba(217, 70, 239, 0.35);
-        padding: 7px 16px;
-        border-radius: 9999px;
-        font-size: 0.75rem;
-        letter-spacing: 0.12em;
-        backdrop-filter: blur(10px);
-        color: #e2e8f0;
-      }
-      .status-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: #ef4444;
-        box-shadow: 0 0 10px #ef4444;
-        transition: background 0.6s ease, box-shadow 0.6s ease;
-      }
-      .status-dot.active {
-        background: #00f0ff;
-        box-shadow: 0 0 14px #00f0ff;
-      }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOIDPORT — Four Towers, Four Puzzles, One Central Core</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #080c14;
+      font-family: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #e2e8f0;
+    }
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
 
-      /* Control deck */
-      .hud-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-      }
-      .view-controls {
-        display: flex;
-        gap: 8px;
-        pointer-events: auto;
-        background: rgba(10, 10, 24, 0.78);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 6px;
-        border-radius: 12px;
-        backdrop-filter: blur(14px);
-      }
-      .view-btn {
-        background: transparent;
-        border: 1px solid transparent;
-        color: #94a3b8;
-        padding: 8px 14px;
-        font-size: 0.75rem;
-        letter-spacing: 0.08em;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.25s ease;
-      }
-      .view-btn:hover {
-        color: #fdf4ff;
-        background: rgba(217, 70, 239, 0.12);
-      }
-      .view-btn.active {
-        color: #f0abfc;
-        background: rgba(217, 70, 239, 0.2);
-        border-color: rgba(217, 70, 239, 0.5);
-        box-shadow: 0 0 12px rgba(217, 70, 239, 0.25);
-      }
-      .action-controls {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 8px;
-        pointer-events: auto;
-      }
-      .key-hints {
-        font-size: 0.68rem;
-        letter-spacing: 0.1em;
-        color: #64748b;
-        background: rgba(10, 10, 22, 0.6);
-        padding: 4px 10px;
-        border-radius: 6px;
-      }
-      .awaken-btn {
-        background: linear-gradient(135deg, rgba(217, 70, 239, 0.3), rgba(168, 85, 247, 0.45));
-        border: 1px solid rgba(217, 70, 239, 0.6);
-        color: #fdf4ff;
-        padding: 10px 22px;
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 0.16em;
-        border-radius: 8px;
-        cursor: pointer;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 20px rgba(217, 70, 239, 0.25);
-        transition: all 0.3s ease;
-      }
-      .awaken-btn:hover {
-        background: linear-gradient(135deg, rgba(217, 70, 239, 0.5), rgba(168, 85, 247, 0.7));
-        border-color: rgba(217, 70, 239, 0.9);
-        box-shadow: 0 0 25px rgba(217, 70, 239, 0.5);
-      }
-      .awaken-btn.awakened {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(185, 28, 28, 0.45));
-        border-color: rgba(239, 68, 68, 0.6);
-        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.25);
-      }
+    /* ── Splash Opening Screen ── */
+    #splash-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, #1b0a2e 0%, #06020c 100%);
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      transition: opacity 0.8s ease;
+    }
+    .splash-title {
+      font-size: 64px;
+      font-weight: 800;
+      letter-spacing: 12px;
+      color: #ffffff;
+      text-transform: uppercase;
+      text-shadow: 0 0 24px rgba(217, 70, 239, 0.7), 0 0 48px rgba(168, 85, 247, 0.4);
+      margin-bottom: 8px;
+    }
+    .splash-sub {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 4px;
+      color: #d946ef;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .splash-desc {
+      max-width: 520px;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #c084fc;
+      margin-bottom: 36px;
+      letter-spacing: 0.5px;
+    }
+    #enter-btn {
+      background: linear-gradient(135deg, rgba(217, 70, 239, 0.3), rgba(147, 51, 234, 0.5));
+      border: 1px solid #d946ef;
+      color: #ffffff;
+      padding: 14px 44px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 24px rgba(217, 70, 239, 0.4);
+    }
+    #enter-btn:hover {
+      background: #d946ef;
+      color: #06020c;
+      box-shadow: 0 0 40px rgba(217, 70, 239, 0.9);
+      transform: translateY(-2px);
+    }
 
-      /* First-person center reticle */
-      #crosshair {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 8px;
-        height: 8px;
-        transform: translate(-50%, -50%);
-        pointer-events: none;
-        z-index: 15;
-      }
-      #crosshair::before, #crosshair::after {
-        content: '';
-        position: absolute;
-        background: rgba(240, 171, 252, 0.7);
-      }
-      #crosshair::before {
-        top: 3px; left: 0; width: 8px; height: 2px;
-      }
-      #crosshair::after {
-        top: 0; left: 3px; width: 2px; height: 8px;
-      }
+    /* ── Top Header ── */
+    .hud-header {
+      position: absolute;
+      top: 24px;
+      left: 32px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      pointer-events: none;
+    }
+    .hud-logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+    }
+    #mode-indicator {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      padding: 3px 10px;
+      border-radius: 3px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #94a3b8;
+      backdrop-filter: blur(8px);
+    }
 
-      /* Cinematic letterbox edge vignette */
-      .vignette-frame {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        box-shadow: inset 0 0 130px rgba(3, 4, 10, 0.88);
-        z-index: 5;
-      }
-    </style>
-  </head>
-  <body>
-    <canvas id="webgl-canvas"></canvas>
-    <div class="vignette-frame"></div>
-    <div id="crosshair"></div>
+    /* ── Objective Tracker (Top Center) ── */
+    .hud-tracker {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+    }
+    .tracker-pills {
+      display: flex;
+      gap: 8px;
+    }
+    .track-pill {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: rgba(11, 16, 28, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #64748b;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s;
+      text-transform: uppercase;
+    }
+    #progress-counter {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #38bdf8;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
 
-    <div id="hud">
-      <div class="hud-header">
-        <div>
-          <div class="brand-title">VOIDPORT</div>
-          <div class="brand-sub">The City That Forgot to Live &middot; Sector 01: The Core</div>
-        </div>
-        <div class="status-pill">
-          <div class="status-dot" id="status-dot"></div>
-          <span id="status-text">CITY DORMANT</span>
-        </div>
+    /* ── Top Right Controls ── */
+    .hud-right {
+      position: absolute;
+      top: 24px;
+      right: 32px;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+    }
+    .hud-btn {
+      background: rgba(11, 16, 28, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #94a3b8;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      padding: 7px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .hud-btn:hover {
+      border-color: #00e5ff;
+      color: #ffffff;
+      background: rgba(0, 229, 255, 0.15);
+    }
+    .hud-btn.active {
+      border-color: #00e5ff;
+      color: #00e5ff;
+      background: rgba(0, 229, 255, 0.2);
+    }
+
+    /* ── Bottom Camera Presets Panel ── */
+    .hud-presets {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+      background: rgba(9, 13, 24, 0.85);
+      padding: 6px 10px;
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+    }
+    .view-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.2px;
+      padding: 6px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .view-btn:hover {
+      color: #ffffff;
+      border-color: rgba(0, 229, 255, 0.4);
+    }
+    .view-btn.active {
+      color: #ffffff;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.4), rgba(2, 132, 199, 0.4));
+      border-color: #00e5ff;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    }
+
+    /* ── Interactive Proximity Prompt ── */
+    #interact-prompt {
+      position: absolute;
+      bottom: 84px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: none;
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.9), rgba(2, 132, 199, 0.9));
+      color: #080c14;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 10px 24px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 0 24px rgba(0, 229, 255, 0.8);
+      animation: pulse 1.2s infinite alternate;
+      text-transform: uppercase;
+    }
+    @keyframes pulse {
+      from { transform: translateX(-50%) scale(1); }
+      to { transform: translateX(-50%) scale(1.05); }
+    }
+
+    /* ── Grand Finale Banner ── */
+    #final-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 8, 16, 0.8);
+      backdrop-filter: blur(16px);
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+    .final-title {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: 16px;
+      color: #ffffff;
+      text-shadow: 0 0 32px #00e5ff, 0 0 64px #38bdf8;
+      margin-bottom: 12px;
+    }
+    .final-sub {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: #34d399;
+      text-shadow: 0 0 16px rgba(52, 211, 153, 0.6);
+      margin-bottom: 16px;
+    }
+    .final-desc {
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: #94a3b8;
+      margin-bottom: 36px;
+    }
+    #dismiss-banner-btn {
+      background: transparent;
+      border: 1px solid #00e5ff;
+      color: #00e5ff;
+      padding: 12px 32px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.25s;
+    }
+    /* ── Subtitle & Voice Dialogue Panel ── */
+    #narrator-subtitle-container {
+      position: absolute;
+      bottom: 84px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 680px;
+      padding: 12px 24px;
+      background: rgba(10, 6, 20, 0.85);
+      border: 1px solid rgba(217, 70, 239, 0.4);
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.25);
+      backdrop-filter: blur(12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    #narrator-subtitle-container.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+      pointer-events: auto;
+    }
+    #narrator-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #00f5d4;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+    #narrator-text {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.5;
+      letter-spacing: 0.6px;
+      color: #f8fafc;
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+    }
+    #skip-intro-btn {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(15, 10, 26, 0.85);
+      border: 1px solid #d946ef;
+      color: #d946ef;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 8px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+      transition: all 0.2s;
+    }
+    #skip-intro-btn:hover {
+      background: #d946ef;
+      color: #06020c;
+      box-shadow: 0 0 18px rgba(217, 70, 239, 0.6);
+    }
+
+    /* ── Mission Briefing Modal ── */
+    #mission-briefing {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 90;
+      background: rgba(11, 7, 24, 0.94);
+      border: 1px solid #00f5d4;
+      border-radius: 12px;
+      padding: 28px 36px;
+      max-width: 540px;
+      text-align: center;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 0 40px rgba(0, 245, 212, 0.35);
+      backdrop-filter: blur(16px);
+    }
+    .briefing-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: #ffffff;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(0, 245, 212, 0.7);
+    }
+    .briefing-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin-bottom: 22px;
+    }
+    .briefing-towers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 24px;
+    }
+    .b-tower-card {
+      background: rgba(30, 20, 50, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      padding: 10px;
+      text-align: left;
+    }
+    .b-tower-card h4 {
+      font-size: 12px;
+      color: #00f5d4;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .b-tower-card p {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    #start-explore-btn {
+      background: linear-gradient(135deg, rgba(0, 245, 212, 0.3), rgba(6, 182, 212, 0.5));
+      border: 1px solid #00f5d4;
+      color: #ffffff;
+      padding: 10px 32px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.25s;
+    }
+    #start-explore-btn:hover {
+      background: #00f5d4;
+      color: #06020c;
+      box-shadow: 0 0 25px rgba(0, 245, 212, 0.8);
+    }
+
+    /* ── Current Task Directive Banner ── */
+    #task-directive-bar {
+      position: absolute;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      background: rgba(13, 8, 28, 0.92);
+      border: 1px solid rgba(0, 245, 212, 0.5);
+      border-radius: 24px;
+      padding: 6px 16px 6px 20px;
+      box-shadow: 0 0 20px rgba(0, 245, 212, 0.25);
+      backdrop-filter: blur(10px);
+    }
+    #task-directive-text {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #00f5d4;
+      text-transform: uppercase;
+    }
+    #task-warp-btn {
+      background: linear-gradient(135deg, rgba(0, 245, 212, 0.3), rgba(168, 85, 247, 0.4));
+      border: 1px solid #00f5d4;
+      color: #ffffff;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    #task-warp-btn:hover {
+      background: #00f5d4;
+      color: #06020c;
+      box-shadow: 0 0 12px rgba(0, 245, 212, 0.8);
+    }
+
+    /* ── Task Confirmation Dialogue Modal ── */
+    #task-confirm-modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 95;
+      background: rgba(10, 6, 22, 0.95);
+      border: 1px solid #00f5d4;
+      border-radius: 12px;
+      padding: 24px 32px;
+      max-width: 480px;
+      text-align: center;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 0 35px rgba(0, 245, 212, 0.4);
+      backdrop-filter: blur(14px);
+    }
+    #task-confirm-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: #ffffff;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    #task-confirm-desc {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin-bottom: 22px;
+    }
+    .confirm-btn-group {
+      display: flex;
+      gap: 14px;
+    }
+    .confirm-btn-yes {
+      background: linear-gradient(135deg, rgba(0, 245, 212, 0.4), rgba(6, 182, 212, 0.6));
+      border: 1px solid #00f5d4;
+      color: #ffffff;
+      padding: 10px 28px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .confirm-btn-yes:hover {
+      background: #00f5d4;
+      color: #06020c;
+      box-shadow: 0 0 20px rgba(0, 245, 212, 0.8);
+    }
+    .confirm-btn-no {
+      background: rgba(30, 20, 50, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #94a3b8;
+      padding: 10px 22px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .confirm-btn-no:hover {
+      border-color: #cbd5e1;
+      color: #ffffff;
+    }
+  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Splash Opening Screen -->
+  <div id="splash-screen">
+    <div class="splash-title">VOIDPORT</div>
+    <div class="splash-sub">FOUR TOWERS • FOUR PUZZLES • ONE CENTRAL CORE</div>
+    <p class="splash-desc">
+      A dormant futuristic metropolis awaits restoration. Explore the four arterial highways, 
+      solve the sector calibration puzzles at each skyscraper terminal, and ignite the central energy core.
+    </p>
+    <button id="enter-btn">ENTER THE CITY</button>
+  </div>
+
+  <!-- HUD Top Left -->
+  <div class="hud-header">
+    <div class="hud-logo">VOIDPORT</div>
+    <div id="mode-indicator">ORBIT OVERVIEW</div>
+  </div>
+
+  <!-- HUD Top Center: Four Towers Tracker -->
+  <div class="hud-tracker">
+    <div class="tracker-pills">
+      <div id="track-signal" class="track-pill" data-name="SIGNAL">○ 01 SIGNAL TOWER</div>
+      <div id="track-reactor" class="track-pill" data-name="REACTOR">○ 02 THE REACTOR</div>
+      <div id="track-archive" class="track-pill" data-name="ARCHIVE">○ 03 THE ARCHIVE</div>
+      <div id="track-nexus" class="track-pill" data-name="NEXUS">○ 04 THE NEXUS</div>
+    </div>
+    <div id="progress-counter">0/4 TOWERS RESTORED</div>
+  </div>
+
+  <!-- HUD Top Right: Audio & Voice Controls -->
+  <div class="hud-right">
+    <button id="voice-toggle-btn" class="hud-btn" style="color: #00f5d4;">🎙️ VOICE</button>
+    <button id="audio-toggle-btn" class="hud-btn" style="color: #d946ef;">🔊 MUSIC</button>
+  </div>
+
+  <!-- Current Serial Directive Banner -->
+  <div id="task-directive-bar">
+    <div id="task-directive-text">ACTIVE OBJECTIVE: 01 SIGNAL TOWER</div>
+    <button id="task-warp-btn">WARP TO TASK →</button>
+  </div>
+
+  <!-- Task Progression Confirmation Modal -->
+  <div id="task-confirm-modal">
+    <div id="task-confirm-title">READY TO BEGIN?</div>
+    <div id="task-confirm-desc">Should we begin with the tasks?</div>
+    <div class="confirm-btn-group">
+      <button id="task-confirm-yes" class="confirm-btn-yes">YES, PROCEED</button>
+      <button id="task-confirm-no" class="confirm-btn-no">FREE ROAM</button>
+    </div>
+  </div>
+
+  <!-- Narrative Skip Intro Button -->
+  <button id="skip-intro-btn">SKIP NARRATIVE [ESC]</button>
+
+  <!-- Mission Briefing Modal -->
+  <div id="mission-briefing">
+    <div class="briefing-title">MISSION PARAMETERS</div>
+    <div class="briefing-text">
+      There are four towers connected to the central energy core. Each tower contains a challenge that must be completed.
+      Follow the roads to reach each building and approach an entrance to begin its task. You may restore the towers in any order.
+    </div>
+    <div class="briefing-towers">
+      <div class="b-tower-card">
+        <h4>01 SIGNAL TOWER (NORTH)</h4>
+        <p>Harmonic Memory Matrix • Sequence Calibration</p>
       </div>
-
-      <div class="hud-footer">
-        <div class="view-controls">
-          <button class="view-btn active" data-view="ground">1. Street Level (FPS)</button>
-          <button class="view-btn" data-view="tower">2. Landmark Spire</button>
-          <button class="view-btn" data-view="architecture">3. Architecture &amp; Skybridge</button>
-          <button class="view-btn" data-view="aerial">4. Aerial Overview</button>
-        </div>
-        <div class="action-controls">
-          <div class="key-hints">WASD: Walk &middot; Shift: Sprint &middot; Space: Jump &middot; E: Interact &middot; M: Toggle View</div>
-          <button class="awaken-btn" id="awaken-btn">INITIALIZE SUBSTATION</button>
-        </div>
+      <div class="b-tower-card">
+        <h4>02 THE REACTOR (EAST)</h4>
+        <p>Flux Magnetic Coupler • Ring Alignment</p>
+      </div>
+      <div class="b-tower-card">
+        <h4>03 THE ARCHIVE (SOUTH)</h4>
+        <p>Quantum Memory Cache • Data Defrag</p>
+      </div>
+      <div class="b-tower-card">
+        <h4>04 THE NEXUS (WEST)</h4>
+        <p>Neural Highway Grid • Link Routing</p>
       </div>
     </div>
+    <button id="start-explore-btn">ACKNOWLEDGE & BEGIN</button>
+  </div>
 
-    <script type="module" src="/src/main.js"></script>
-  </body>
+  <!-- HUD Bottom Camera Presets -->
+  <div class="hud-presets">
+    <button class="view-btn active" data-preset="overview">Overview</button>
+    <button class="view-btn" data-preset="core">Central Core</button>
+    <button class="view-btn" data-preset="signal">North Tower</button>
+    <button class="view-btn" data-preset="reactor">East Reactor</button>
+    <button class="view-btn" data-preset="archive">South Archive</button>
+    <button class="view-btn" data-preset="nexus">West Nexus</button>
+    <button class="view-btn" data-preset="walk">Walk Mode</button>
+  </div>
+
+  <!-- Interactive Proximity Prompt -->
+  <div id="interact-prompt">[E] ACCESS TERMINAL</div>
+
+  <!-- Grand Finale Overlay Banner -->
+  <div id="final-banner">
+    <div class="final-title">VOIDPORT</div>
+    <div class="final-sub">SYSTEM RESTORED.</div>
+    <div class="final-desc">ALL FOUR HIGHWAYS SYNCHRONIZED • PLANETARY BEACON ONLINE</div>
+    <button id="dismiss-banner-btn" onclick="document.getElementById('final-banner').style.display='none'">CONTINUE EXPLORATION</button>
+  </div>
+
+  <!-- WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <script type="module" src="/src/four_towers_main.js"></script>
+</body>
 </html>
